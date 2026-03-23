@@ -75,3 +75,4 @@ Fork本项目
 <img width="685" alt="image" src="https://github.com/tech-shrimp/GithubActionSample/assets/154193368/e28ee156-642a-4c25-94ff-d42af072aa15">
 
 进入自己项目的Action  ----> 签到薅羊毛 ---> daily_sign.yml --> 修改cron表达式的执行时间
+1
