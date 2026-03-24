@@ -199,25 +199,25 @@ def get_fallback_suggestions(avg_temp, weather_type, wind):
     """
     # 穿衣建议
     if avg_temp >= 30:
-        clothing = "穿短袖、短裤、凉鞋，注意防晒"
+        clothing = "注意防晒"
     elif avg_temp >= 20:
-        clothing = "穿长袖、长裤，可备薄外套"
+        clothing = "可备薄外套"
     elif avg_temp >= 10:
-        clothing = "穿毛衣、外套，注意保暖"
+        clothing = "注意保暖"
     else:
-        clothing = "穿羽绒服、厚外套，做好防寒"
+        clothing = "做好防寒"
     
     # 出行建议
     if "雨" in weather_type or "雪" in weather_type:
-        travel = "携带雨具，注意路滑，谨慎出行"
+        travel = "注意路滑，谨慎出行"
     elif "霾" in weather_type or "雾" in weather_type:
-        travel = "减少外出，佩戴口罩，注意安全"
+        travel = "佩戴口罩，注意安全"
     elif avg_temp >= 35:
-        travel = "避免高温时段外出，多补水"
+        travel = "避免高温时段外出"
     elif avg_temp <= -10:
-        travel = "减少不必要外出，注意防冻"
+        travel = "减少不必要外出"
     else:
-        travel = "适合出行，注意天气变化"
+        travel = "适合出行"
     
     return f"穿衣建议：{clothing} | 出行建议：{travel}"
 
@@ -244,9 +244,6 @@ def send_weather(access_token, weather):
     # 获取AI建议和情话
     ai_suggestions = get_ai_suggestions(weather)
     daily_love = get_daily_love()
-    
-    # 组合消息：AI建议 + 情话（情话换行）
-    combined_message = f"{ai_suggestions}\n💕 {daily_love}"
 
     body = {
         "touser": openId.strip(),
@@ -266,7 +263,10 @@ def send_weather(access_token, weather):
                 "value": weather[1]
             },
             "today_note": {
-                "value": combined_message
+                "value": ai_suggestions
+            },
+            "love": {
+                "value": daily_love
             }
         }
     }
