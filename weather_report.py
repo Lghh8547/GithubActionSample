@@ -2,6 +2,7 @@
 import os
 import requests
 import json
+import re
 from bs4 import BeautifulSoup
 
 # 从测试号信息获取
@@ -70,6 +71,157 @@ def get_access_token():
     return access_token
 
 
+def get_ai_suggestions(weather_info):
+    """
+    基于天气信息获取国产AI穿衣和出行建议
+    """
+    city, temp, weather_type, wind = weather_info
+    
+    # 解析温度范围
+    temp_match = re.search(r'(\d+)—(\d+)|(-?\d+)', temp)
+    if temp_match:
+        if temp_match.group(1) and temp_match.group(2):
+            low_temp = int(temp_match.group(1))
+            high_temp = int(temp_match.group(2))
+        else:
+            low_temp = high_temp = int(temp_match.group(3))
+    else:
+        low_temp = high_temp = 20  # 默认温度
+    
+    avg_temp = (low_temp + high_temp) / 2
+    
+    # 构建天气描述
+    weather_desc = f"城市：{city}，温度：{temp}，天气：{weather_type}，风力：{wind}"
+    
+    # AI提示词
+    prompt = f"""
+基于以下天气信息，请提供简洁实用的穿衣建议和出行建议：
+
+{weather_desc}
+平均温度：{avg_temp:.1f}°C
+
+请分别回答：
+1. 穿衣建议：（具体建议，如穿什么类型的衣服、材质、厚度等）
+2. 出行建议：（是否适合出行、注意事项、携带物品等）
+
+要求：
+- 建议要简洁明了，每条不超过50字
+- 语言要亲切自然
+- 针对当前天气条件给出实用建议
+- 格式：穿衣建议：XXX | 出行建议：XXX
+"""
+    
+    try:
+        # 尝试使用百度文心一言
+        if os.environ.get("bce-v3/ALTAK-BSJRBGY3ltxMPrcRCSV7T/23825adcf43e4c100833513f4e5ae9c725e90d5c") and os.environ.get("ALTAKfQCZXjijtPGEorwshgbGF"):
+            return get_baidu_suggestions(prompt)
+        # 尝试使用阿里通义千问
+        elif os.environ.get("DASHSCOPE_API_KEY"):
+            return get_qwen_suggestions(prompt)
+        else:
+            print("未配置国产AI API，使用备用规则建议")
+            return get_fallback_suggestions(avg_temp, weather_type, wind)
+        
+    except Exception as e:
+        print(f"国产AI建议获取失败: {e}")
+        # 备用规则建议
+        return get_fallback_suggestions(avg_temp, weather_type, wind)
+
+
+def get_baidu_suggestions(prompt):
+    """
+    使用百度文心一言获取建议
+    """
+    import requests
+    import time
+    
+    # 获取access_token
+    api_key = os.environ.get("bce-v3/ALTAK-BSJRBGY3ltxMPrcRCSV7T/23825adcf43e4c100833513f4e5ae9c725e90d5c")
+    secret_key = os.environ.get("ALTAKfQCZXjijtPGEorwshgbGF")
+    
+    token_url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={api_key}&client_secret={secret_key}"
+    token_response = requests.get(token_url)
+    access_token = token_response.json().get("access_token")
+    
+    if not access_token:
+        raise Exception("百度API token获取失败")
+    
+    # 调用文心一言
+    url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token={access_token}"
+    
+    payload = {
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+        "max_output_tokens": 150
+    }
+    
+    response = requests.post(url, json=payload)
+    result = response.json()
+    
+    if "result" in result:
+        return result["result"].strip()
+    else:
+        raise Exception(f"百度API错误: {result}")
+
+
+def get_qwen_suggestions(prompt):
+    """
+    使用阿里通义千问获取建议
+    """
+    try:
+        from dashscope import Generation
+        import dashscope
+        
+        dashscope.api_key = os.environ.get("DASHSCOPE_API_KEY")
+        
+        response = Generation.call(
+            model="qwen-turbo",
+            prompt=prompt,
+            max_tokens=150,
+            temperature=0.7
+        )
+        
+        if response.status_code == 200:
+            return response.output.text.strip()
+        else:
+            raise Exception(f"通义千问API错误: {response}")
+            
+    except ImportError:
+        print("需要安装dashscope: pip install dashscope")
+        raise
+
+
+def get_fallback_suggestions(avg_temp, weather_type, wind):
+    """
+    备用规则建议（当AI不可用时）
+    """
+    # 穿衣建议
+    if avg_temp >= 30:
+        clothing = "穿短袖、短裤、凉鞋，注意防晒"
+    elif avg_temp >= 20:
+        clothing = "穿长袖、长裤，可备薄外套"
+    elif avg_temp >= 10:
+        clothing = "穿毛衣、外套，注意保暖"
+    else:
+        clothing = "穿羽绒服、厚外套，做好防寒"
+    
+    # 出行建议
+    if "雨" in weather_type or "雪" in weather_type:
+        travel = "携带雨具，注意路滑，谨慎出行"
+    elif "霾" in weather_type or "雾" in weather_type:
+        travel = "减少外出，佩戴口罩，注意安全"
+    elif avg_temp >= 35:
+        travel = "避免高温时段外出，多补水"
+    elif avg_temp <= -10:
+        travel = "减少不必要外出，注意防冻"
+    else:
+        travel = "适合出行，注意天气变化"
+    
+    return f"穿衣建议：{clothing} | 出行建议：{travel}"
+
+
 def get_daily_love():
     # 每日一句情话
     url = "https://api.lovelive.tools/api/SweetNothings/Serialization/Json"
@@ -111,7 +263,7 @@ def send_weather(access_token, weather):
                 "value": weather[3]
             },
             "today_note": {
-                "value": get_daily_love()
+                "value": get_ai_suggestions(weather)
             }
         }
     }
