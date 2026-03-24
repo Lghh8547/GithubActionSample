@@ -113,7 +113,7 @@ def get_ai_suggestions(weather_info):
     
     try:
         # 尝试使用百度文心一言
-        if os.environ.get("bce-v3/ALTAK-BSJRBGY3ltxMPrcRCSV7T/23825adcf43e4c100833513f4e5ae9c725e90d5c") and os.environ.get("ALTAKfQCZXjijtPGEorwshgbGF"):
+        if os.environ.get("BAIDU_API_KEY") and os.environ.get("BAIDU_SECRET_KEY"):
             return get_baidu_suggestions(prompt)
         # 尝试使用阿里通义千问
         elif os.environ.get("DASHSCOPE_API_KEY"):
@@ -136,8 +136,8 @@ def get_baidu_suggestions(prompt):
     import time
     
     # 获取access_token
-    api_key = os.environ.get("bce-v3/ALTAK-BSJRBGY3ltxMPrcRCSV7T/23825adcf43e4c100833513f4e5ae9c725e90d5c")
-    secret_key = os.environ.get("ALTAKfQCZXjijtPGEorwshgbGF")
+    api_key = os.environ.get("BAIDU_API_KEY")
+    secret_key = os.environ.get("BAIDU_SECRET_KEY")
     
     token_url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={api_key}&client_secret={secret_key}"
     token_response = requests.get(token_url)

@@ -36,3 +36,6 @@ jobs:
         APP_SECRET: ${{ secrets.APP_SECRET }}
         OPEN_ID: ${{ secrets.OPEN_ID }}
         TEMPLATE_ID: ${{ secrets.TEMPLATE_ID }}
+        BAIDU_API_KEY: ${{ secrets.BAIDU_API_KEY }}
+        BAIDU_SECRET_KEY: ${{ secrets.BAIDU_SECRET_KEY }}
+        DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
