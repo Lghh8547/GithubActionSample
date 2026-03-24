@@ -232,61 +232,6 @@ def get_daily_love():
     return daily_love
 
 
-def format_weather_message(weather):
-    """
-    格式化天气消息显示
-    """
-    import datetime
-    city, temp, weather_type, wind = weather
-    
-    # 获取AI建议和情话
-    ai_suggestions = get_ai_suggestions(weather)
-    daily_love = get_daily_love()
-    
-    # 多种格式选择
-    formats = {
-        "emoji": f"🌤️ {city}天气\n"
-                f"📅 {datetime.date.today().strftime('%Y年%m月%d日')}\n"
-                f"🌡️ 气温：{temp}\n"
-                f"☁️ 天气：{weather_type}\n"
-                f"💨 风力：{wind}\n"
-                f"👕 {ai_suggestions}\n"
-                f"💕 {daily_love}",
-                
-        "simple": f"【{city}天气预报】\n"
-                 f"日期：{datetime.date.today().strftime('%Y年%m月%d日')}\n"
-                 f"温度：{temp}\n"
-                 f"天气：{weather_type}\n"
-                 f"风力：{wind}\n"
-                 f"建议：{ai_suggestions}\n"
-                 f"情话：{daily_love}",
-                 
-        "detailed": f"📍 位置：{city}\n"
-                   f"📆 日期：{datetime.date.today().strftime('%Y年%m月%d日')}\n"
-                   f"🌡️ 温度范围：{temp}\n"
-                   f"🌤️ 天气状况：{weather_type}\n"
-                   f"━━━━━━━━━━━━━━\n"
-                   f"💡 智能建议：\n{ai_suggestions}\n"
-                   f"💕 每日情话：\n{daily_love}",
-                   
-        "card": f"┌─────────────────┐\n"
-                f"│  🌤️ {city}天气预报  │\n"
-                f"├─────────────────┤\n"
-                f"│ 📅 {datetime.date.today().strftime('%m月%d日')} │\n"
-                f"│ 🌡️ {temp}        │\n"
-                f"│ ☁️ {weather_type}        │\n"
-                f"│ 💨 {wind}         │\n"
-                f"├─────────────────┤\n"
-                f"│ 💡 {ai_suggestions} │\n"
-                f"│ 💕 {daily_love} │\n"
-                f"└─────────────────┘"
-    }
-    
-    # 默认使用detailed格式，可以通过环境变量切换
-    format_style = os.environ.get("WEATHER_FORMAT", "detailed")
-    return formats.get(format_style, formats["detailed"])
-
-
 def send_weather(access_token, weather):
     # touser 就是 openID
     # template_id 就是模板ID
@@ -296,8 +241,12 @@ def send_weather(access_token, weather):
     import datetime
     today = datetime.date.today()
     
-    # 格式化消息
-    formatted_message = format_weather_message(weather)
+    # 获取AI建议和情话
+    ai_suggestions = get_ai_suggestions(weather)
+    daily_love = get_daily_love()
+    
+    # 组合消息：AI建议 + 情话
+    combined_message = f"{ai_suggestions}\n💕 {daily_love}"
 
     body = {
         "touser": openId.strip(),
@@ -316,11 +265,8 @@ def send_weather(access_token, weather):
             "temp": {
                 "value": weather[1]
             },
-            "wind_dir": {
-                "value": weather[3]
-            },
             "today_note": {
-                "value": formatted_message
+                "value": combined_message
             }
         }
     }
