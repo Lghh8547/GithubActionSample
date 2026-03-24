@@ -39,3 +39,4 @@ jobs:
         BAIDU_API_KEY: ${{ secrets.BAIDU_API_KEY }}
         BAIDU_SECRET_KEY: ${{ secrets.BAIDU_SECRET_KEY }}
         DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+        WEATHER_FORMAT: ${{ secrets.WEATHER_FORMAT }}
