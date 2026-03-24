@@ -236,6 +236,7 @@ def format_weather_message(weather):
     """
     格式化天气消息显示
     """
+    import datetime
     city, temp, weather_type, wind = weather
     
     # 获取AI建议和情话
