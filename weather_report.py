@@ -245,7 +245,7 @@ def send_weather(access_token, weather):
     ai_suggestions = get_ai_suggestions(weather)
     daily_love = get_daily_love()
     
-    # 组合消息：AI建议 + 情话
+    # 组合消息：AI建议 + 情话（情话换行）
     combined_message = f"{ai_suggestions}\n💕 {daily_love}"
 
     body = {
